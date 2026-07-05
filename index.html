@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mini Plataforma</title>
+<style>
+body{
+    margin:0;
+    background:#87CEEB;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+}
+canvas{
+    display:block;
+    margin:auto;
+    background:linear-gradient(#87CEEB,#E0F7FA);
+}
+</style>
+</head>
+<body>
+
+<canvas id="game" width="900" height="500"></canvas>
+
+<script>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const player={
+    x:50,
+    y:100,
+    w:30,
+    h:40,
+    dx:0,
+    dy:0,
+    speed:5,
+    jump:-13,
+    ground:false,
+    score:0
+};
+
+const gravity=0.7;
+
+const keys={};
+
+document.addEventListener("keydown",e=>keys[e.key]=true);
+document.addEventListener("keyup",e=>keys[e.key]=false);
+
+const platforms=[
+{x:0,y:460,w:900,h:40},
+{x:170,y:360,w:140,h:20},
+{x:420,y:300,w:160,h:20},
+{x:670,y:220,w:150,h:20}
+];
+
+const coins=[
+{x:220,y:325},
+{x:500,y:265},
+{x:730,y:185}
+];
+
+const goal={
+x:840,
+y:160,
+w:20,
+h:60
+};
+
+function update(){
+
+player.dx=0;
+
+if(keys["ArrowLeft"]) player.dx=-player.speed;
+if(keys["ArrowRight"]) player.dx=player.speed;
+
+if((keys["ArrowUp"]||keys[" "]) && player.ground){
+    player.dy=player.jump;
+    player.ground=false;
+}
+
+player.x+=player.dx;
+player.dy+=gravity;
+player.y+=player.dy;
+
+player.ground=false;
+
+platforms.forEach(p=>{
+
+if(player.x<p.x+p.w &&
+player.x+player.w>p.x &&
+player.y+player.h>p.y &&
+player.y+player.h<p.y+25 &&
+player.dy>=0){
+
+player.y=p.y-player.h;
+player.dy=0;
+player.ground=true;
+
+}
+
+});
+
+coins.forEach(c=>{
+
+if(!c.hit &&
+player.x<c.x+15 &&
+player.x+player.w>c.x &&
+player.y<c.y+15 &&
+player.y+player.h>c.y){
+
+c.hit=true;
+player.score++;
+
+}
+
+});
+
+if(player.x<0)player.x=0;
+if(player.x+player.w>900)player.x=900-player.w;
+
+if(player.y>520){
+
+player.x=50;
+player.y=100;
+player.dy=0;
+
+}
+
+if(
+player.x<goal.x+goal.w &&
+player.x+player.w>goal.x &&
+player.y<goal.y+goal.h &&
+player.y+player.h>goal.y){
+
+alert("¡GANASTE!\nMonedas: "+player.score);
+location.reload();
+
+}
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,900,500);
+
+ctx.fillStyle="#66BB6A";
+platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
+
+coins.forEach(c=>{
+
+if(!c.hit){
+
+ctx.fillStyle="gold";
+ctx.beginPath();
+ctx.arc(c.x,c.y,8,0,Math.PI*2);
+ctx.fill();
+
+}
+
+});
+
+ctx.fillStyle="red";
+ctx.fillRect(goal.x,goal.y,goal.w,goal.h);
+
+ctx.fillStyle="#795548";
+ctx.fillRect(goal.x-3,goal.y,3,300);
+
+ctx.fillStyle="#FFD54F";
+ctx.fillRect(player.x,player.y,player.w,player.h);
+
+ctx.fillStyle="black";
+ctx.fillRect(player.x+5,player.y+8,4,4);
+ctx.fillRect(player.x+20,player.y+8,4,4);
+
+ctx.font="22px Arial";
+ctx.fillText("🪙 "+player.score,20,30);
+
+ctx.fillStyle="white";
+ctx.fillText("← → mover   ↑ saltar",560,30);
+
+}
+
+function loop(){
+
+update();
+draw();
+requestAnimationFrame(loop);
+
+}
+
+loop();
+
+</script>
+
+</body>
+</html>
